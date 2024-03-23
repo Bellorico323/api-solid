@@ -1,10 +1,10 @@
-import { expect, describe, it, beforeEach, vi, afterEach } from 'vitest'
 import { InMemoryCheckInsRepository } from '@/repositories/in-memory/in-memory-check-ins-repository'
-import { CheckInUseCase } from './check-in'
-import { InMemoryGymsRepository } from '@/repositories/in-memory/in-memory-gym-repository'
+import { expect, describe, it, beforeEach, vi, afterEach } from 'vitest'
+import { CheckInUseCase } from '@/use-cases/check-in'
+import { InMemoryGymsRepository } from '@/repositories/in-memory/in-memory-gyms-repository'
 import { Decimal } from '@prisma/client/runtime/library'
-import { MaxNumberOfCheckInsError } from './errors/max-number-of-check-ins-error'
-import { MaxDistanceError } from './errors/max-distance-error'
+import { MaxNumberOfCheckInsError } from '@/use-cases/errors/max-number-of-check-ins-error'
+import { MaxDistanceError } from '@/use-cases/errors/max-distance-error'
 
 let checkInsRepository: InMemoryCheckInsRepository
 let gymsRepository: InMemoryGymsRepository
@@ -18,11 +18,11 @@ describe('Check-in Use Case', () => {
 
     await gymsRepository.create({
       id: 'gym-01',
-      title: 'JavaScript gym',
+      title: 'JavaScript Gym',
       description: '',
-      latitude: -23.6697417,
-      longitude: -46.5270625,
       phone: '',
+      latitude: -27.2092052,
+      longitude: -49.6401091,
     })
 
     vi.useFakeTimers()
@@ -36,41 +36,41 @@ describe('Check-in Use Case', () => {
     const { checkIn } = await sut.execute({
       gymId: 'gym-01',
       userId: 'user-01',
-      userLatitude: -23.6697417,
-      userLongitude: -46.5270625,
+      userLatitude: -27.2092052,
+      userLongitude: -49.6401091,
     })
 
     expect(checkIn.id).toEqual(expect.any(String))
   })
 
-  it('should not be able to check in twice on the same day', async () => {
+  it('should not be able to check in twice in the same day', async () => {
     vi.setSystemTime(new Date(2022, 0, 20, 8, 0, 0))
 
     await sut.execute({
       gymId: 'gym-01',
       userId: 'user-01',
-      userLatitude: -23.6697417,
-      userLongitude: -46.5270625,
+      userLatitude: -27.2092052,
+      userLongitude: -49.6401091,
     })
 
     await expect(() =>
       sut.execute({
         gymId: 'gym-01',
         userId: 'user-01',
-        userLatitude: -23.6697417,
-        userLongitude: -46.5270625,
+        userLatitude: -27.2092052,
+        userLongitude: -49.6401091,
       }),
     ).rejects.toBeInstanceOf(MaxNumberOfCheckInsError)
   })
 
-  it('should not be able to check in twice but on different days', async () => {
+  it('should be able to check in twice but in different days', async () => {
     vi.setSystemTime(new Date(2022, 0, 20, 8, 0, 0))
 
     await sut.execute({
       gymId: 'gym-01',
       userId: 'user-01',
-      userLatitude: -23.6697417,
-      userLongitude: -46.5270625,
+      userLatitude: -27.2092052,
+      userLongitude: -49.6401091,
     })
 
     vi.setSystemTime(new Date(2022, 0, 21, 8, 0, 0))
@@ -78,8 +78,8 @@ describe('Check-in Use Case', () => {
     const { checkIn } = await sut.execute({
       gymId: 'gym-01',
       userId: 'user-01',
-      userLatitude: -23.6697417,
-      userLongitude: -46.5270625,
+      userLatitude: -27.2092052,
+      userLongitude: -49.6401091,
     })
 
     expect(checkIn.id).toEqual(expect.any(String))
@@ -88,19 +88,19 @@ describe('Check-in Use Case', () => {
   it('should not be able to check in on distant gym', async () => {
     gymsRepository.items.push({
       id: 'gym-02',
-      title: 'JavaScript gym',
+      title: 'JavaScript Gym',
       description: '',
-      latitude: new Decimal(-23.6881232),
-      longitude: new Decimal(-46.6111828),
       phone: '',
+      latitude: new Decimal(-27.0747279),
+      longitude: new Decimal(-49.4889672),
     })
 
     await expect(() =>
       sut.execute({
         gymId: 'gym-02',
         userId: 'user-01',
-        userLatitude: -23.6697417,
-        userLongitude: -46.5270625,
+        userLatitude: -27.2092052,
+        userLongitude: -49.6401091,
       }),
     ).rejects.toBeInstanceOf(MaxDistanceError)
   })

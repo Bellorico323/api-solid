@@ -1,11 +1,11 @@
+import { GymsRepository } from '@/repositories/gyms-repository'
 import { Gym, Prisma } from '@prisma/client'
-import { GymsRepository } from '../gyms-repository'
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 export class InMemoryGymsRepository implements GymsRepository {
   public items: Gym[] = []
 
-  async findById(id: string): Promise<Gym | null> {
+  async findById(id: string) {
     const gym = this.items.find((item) => item.id === id)
 
     if (!gym) {
@@ -17,7 +17,7 @@ export class InMemoryGymsRepository implements GymsRepository {
 
   async create(data: Prisma.GymCreateInput) {
     const gym = {
-      id: randomUUID(),
+      id: data.id ?? randomUUID(),
       title: data.title,
       description: data.description ?? null,
       phone: data.phone ?? null,
